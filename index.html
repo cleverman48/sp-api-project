@@ -47,11 +47,12 @@
                 // Get the selected values from the select controls
                 let as = getAccessKey();
                 if(as){
-                    let li = getListingsItem();
-                    if(li)
-                    {
-                        getInventory();
-                    }
+                    // let li = getListingsItem();
+                    // if(li)
+                    // {
+                    //     getInventory();
+                    // }
+                    getReport();
                 } 
             });
         });
@@ -157,7 +158,27 @@
                 });
             }
         }
-        
+        function getReport()
+        {
+            var region = $('#region').val();
+            var marketplaceValue = $('#marketplace').val();
+            var data = {
+                region: region,
+                marketplace: marketplaceValue,
+                access_token: localStorage.getItem("access_token"),
+            };
+            $.ajax({
+                url: '/get_reports',
+                method: 'POST',
+                data: data,
+                success: function (res) {
+                    console.log(res);
+                },
+                error: function (error) {
+                    console.error(error);
+                }
+            });
+        }
         function updateMarketplace() {
             var region = $('#region').val();
             var marketplace = $('#marketplace');

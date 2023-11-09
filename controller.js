@@ -118,4 +118,29 @@ route.post("/get_inventory_summary_next", async (req, res) => {
     res.send(rlt);
 });
 
+route.post("/get_reports", async (req, res) => {
+    let access_token = req.body.access_token;
+    let region = req.body.region;
+    const spClient = new SellingPartner({
+        region: region,
+        refresh_token: process.env.REFRESH_TOKEN,
+        access_token: access_token
+    });
+    let rlt = await spClient.downloadReport({
+        body: {
+          reportType: "GET_MERCHANT_LISTINGS_ALL_DATA",
+          //reportType: "GET_FLAT_FILE_OPEN_LISTINGS_DATA",
+          marketplaceIds: [req.body.marketplace],
+          sellerId: process.env.SELLER_ID,
+        },
+        version: "2021-06-30",
+        interval: 8000,
+        download: {
+          json: true,
+          file: "public/assets/reports/report.json"
+        }
+    });
+    res.send(rlt);
+});
+
 module.exports = route;
