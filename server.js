@@ -35,9 +35,8 @@ app.listen(process.env.PORT, () => {
 
 const wss = new WebSocket.Server({ port: 9000 });
 
-wss.on("connection", (ws) => {
+wss.on("connection",async (ws) => {
   console.log("WebSocket connection established.");
-
   ws.on("message", (message) => {
     //let data = JSON.parse(message);
     msg_string = message.toString();
@@ -53,6 +52,9 @@ wss.on("connection", (ws) => {
             ws.send(JSON.stringify(res));
           })
           .catch((err) => ws.send(err));
+        break;
+      case "item_summary":
+        getItemSummary(data, ws);
         break;
       default:
         console.log("Received unknown message");
@@ -97,4 +99,59 @@ async function updateReportFile(data, ws) {
       file: "public/assets/reports/report.json",
     },
   });
+}
+async function getItemSummary(data, ws) {
+  let access_token = data.access_token;
+  let region = data.region;
+  const spClient = new SellingPartner({
+      region: region,
+      refresh_token: process.env.REFRESH_TOKEN,
+      access_token: access_token
+  });
+  let listing_item = await spClient.callAPI({
+      operation: "getListingsItem",
+      endpoint: "listingsItems",
+      query: {
+          marketplaceIds: data.marketplace,
+          issueLocale: "ja_JP",
+          includedData: "summaries,attributes,issues,offers,fulfillmentAvailability,procurement",
+      },
+      path: {
+          sellerId: process.env.SELLER_ID,
+          sku: "0A-ZTEV-ATST",
+      },       
+  });
+  let asin = listing_item.summaries[0].asin;  
+  let catalog_item = await spClient.callAPI({
+      operation: "getCatalogItem",
+      endpoint: "catalogItems",
+      path: {
+          asin: asin
+      },
+      query: {
+          marketplaceIds: data.marketplace,
+          includedData: "attributes,dimensions,identifiers,images,productTypes,relationships,salesRanks,summaries",
+          locale: "ja_JP"
+      },
+      options: {
+          version: "2022-04-01"
+      }  
+  });
+  let inventory_summary = await spClient.callAPI({
+      operation: "getInventorySummaries",
+      endpoint: "fbaInventory",
+      query: {
+        details: true,
+        granularityType: "Marketplace",
+        granularityId: data.marketplace,
+        marketplaceIds: data.marketplace,
+        sellerSku: "0A-ZTEV-ATST",
+      }
+  });
+  let item = {
+    listing_item: listing_item,
+    catalog_item: catalog_item,
+    inventory_summary: inventory_summary
+  };
+  ws.send(JSON.stringify({type:"receivedItemSummary", data:item}));
 }

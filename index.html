@@ -73,8 +73,21 @@
                     return false;
                 }
             });
+        }  
+        const time_id = setTimeout(getItem,3000);
+        function getItem(){
+            let rp_ju = localStorage.getItem("report_jup");
+            if(rp_ju === true)
+            {
+                clearTimeout(timerId);
+                let gr = getListingsItem();
+                if(gr)
+                {
+                    time_id = setTimeout(getItem,3000);
+                    localStorage.setItem("report_jup",false);
+                }
+            }
         }
-        
         function updateMarketplace() {
             var region = $('#region').val();
             var marketplace = $('#marketplace');
@@ -107,12 +120,10 @@
                 marketplace.append('<option value="A39IBJ37TRP1C6">Australia</option>');
                 marketplace.append('<option value="A1VC38T7YXB528">Japan</option>');
             }
-        }
-        
+        } 
         $('#region').change(function () {
             updateMarketplace();
         });
-        
         updateMarketplace();
     </script>
 </body>
