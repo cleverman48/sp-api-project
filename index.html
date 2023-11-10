@@ -39,46 +39,16 @@
     <!-- Include jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./getdata.js"></script>
 
     <script>
         var summary_data = {};
         $(document).ready(function () {
             $('#submitButton').click(function () {
                 // Get the selected values from the select controls
-                let as = getAccessKey();
-                if(as){
-                    // let li = getListingsItem();
-                    // if(li)
-                    // {
-                    //     getInventory();
-                    // }
-                    getReport();
-                } 
+                getListingsItem();
             });
         });
-        
-        async function getAccessKey()
-        {
-            var region = $('#region').val();
-            var marketplaceValue = $('#marketplace').val();
-            var data = {
-                region: region,
-                marketplace: marketplaceValue
-            };
-            $.ajax({
-                url: '/get_access_key',
-                method: 'POST',
-                data: data,
-                success: function (response) {
-                    localStorage.setItem('access_token', response);
-                    return true;
-                },
-                error: function (error) {
-                    console.error(error);
-                    return false;
-                }
-            });
-        }
 
         async function getListingsItem()
         {          
@@ -104,81 +74,7 @@
                 }
             });
         }
-        function getInventory()
-        {
-            var region = $('#region').val();
-            var marketplaceValue = $('#marketplace').val();
-            var data = {
-                region: region,
-                marketplace: marketplaceValue,
-                access_token: localStorage.getItem("access_token"),
-            };
-            $.ajax({
-                url: '/get_inventory_summary',
-                method: 'POST',
-                data: data,
-                success: function (res) {
-                    summary_data.inventroy = res;
-                    console.log(summary_data);
-                },
-                error: function (error) {
-                    console.error(error);
-                }
-            });
-        }
-        function getSummaryNext(res)
-        {
-            if(res.nextToken === null && res.nextToken === "")
-            {
-                console.log(summary_data);
-                return;
-            }
-            else
-            {
-                var region = $('#region').val();
-                var marketplaceValue = $('#marketplace').val();
-                var data = {
-                    region: region,
-                    marketplace: marketplaceValue,
-                    access_token: localStorage.getItem("access_token"),
-                    next_token: res.nextToken
-                };
-                $.ajax({
-                    url: '/get_inventory_summary_next',
-                    method: 'POST',
-                    data: data,
-                    success: function (res_m) {
-                        // Handle the response from the server
-                        summary_data.push(res_m.inventorySummaries);
-                        getSummaryNext(res_m);
-                    },
-                    error: function (error) {
-                        console.error(error);
-                    }
-                });
-            }
-        }
-        function getReport()
-        {
-            var region = $('#region').val();
-            var marketplaceValue = $('#marketplace').val();
-            var data = {
-                region: region,
-                marketplace: marketplaceValue,
-                access_token: localStorage.getItem("access_token"),
-            };
-            $.ajax({
-                url: '/get_reports',
-                method: 'POST',
-                data: data,
-                success: function (res) {
-                    console.log(res);
-                },
-                error: function (error) {
-                    console.error(error);
-                }
-            });
-        }
+        
         function updateMarketplace() {
             var region = $('#region').val();
             var marketplace = $('#marketplace');

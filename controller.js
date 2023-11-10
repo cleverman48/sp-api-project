@@ -54,8 +54,7 @@ route.post("/get_listings_item", async (req, res) => {
             sku: "0A-ZTEV-ATST",
         },       
     });
-    let asin = listing_item.summaries[0].asin;
-   
+    let asin = listing_item.summaries[0].asin;  
     let catalog_item = await spClient.callAPI({
         operation: "getCatalogItem",
         endpoint: "catalogItems",
@@ -71,17 +70,7 @@ route.post("/get_listings_item", async (req, res) => {
             version: "2022-04-01"
         }  
     });
-    res.send({listing_item:listing_item, catalog_item:catalog_item});
-});
-route.post("/get_inventory_summary", async (req, res) => {
-    let access_token = req.body.access_token;
-
-    const spClient = new SellingPartner({
-        region: req.body.region,
-        refresh_token: process.env.REFRESH_TOKEN,
-        access_token: access_token
-    });
-    let rlt = await spClient.callAPI({
+    let inventory_summary = await spClient.callAPI({
         operation: "getInventorySummaries",
         endpoint: "fbaInventory",
         query: {
@@ -92,55 +81,10 @@ route.post("/get_inventory_summary", async (req, res) => {
           sellerSku: "0A-ZTEV-ATST",
         }
     });
-    res.send(rlt);
+    res.send({
+        listing_item: listing_item,
+        catalog_item: catalog_item,
+        inventory_summary: inventory_summary
+    });
 });
-route.post("/get_inventory_summary_next", async (req, res) => {
-    //getInventorySummaries(req, res);
-    let access_token = req.body.access_token;
-    let nextToken = req.body.next_token;
-    const spClient = new SellingPartner({
-        region: req.body.region,
-        refresh_token: process.env.REFRESH_TOKEN,
-        access_token: access_token
-    });
-    let rlt = await spClient.callAPI({
-        operation: "getInventorySummaries",
-        endpoint: "fbaInventory",
-        query: {
-          details: true,
-          granularityType: "Marketplace",
-          granularityId: req.body.marketplace,
-          marketplaceIds: req.body.marketplace,
-          sellerSku: "0A-ZTEV-ATST",
-          nextToken:nextToken,
-        }
-    });
-    res.send(rlt);
-});
-
-route.post("/get_reports", async (req, res) => {
-    let access_token = req.body.access_token;
-    let region = req.body.region;
-    const spClient = new SellingPartner({
-        region: region,
-        refresh_token: process.env.REFRESH_TOKEN,
-        access_token: access_token
-    });
-    let rlt = await spClient.downloadReport({
-        body: {
-          reportType: "GET_MERCHANT_LISTINGS_ALL_DATA",
-          //reportType: "GET_FLAT_FILE_OPEN_LISTINGS_DATA",
-          marketplaceIds: [req.body.marketplace],
-          sellerId: process.env.SELLER_ID,
-        },
-        version: "2021-06-30",
-        interval: 8000,
-        download: {
-          json: true,
-          file: "public/assets/reports/report.json"
-        }
-    });
-    res.send(rlt);
-});
-
 module.exports = route;
